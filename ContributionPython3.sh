@@ -1,7 +1,29 @@
 #!/bin/bash
 
-# Name:    ContributionCloudAPI
-# Purpose: Execute the ContributionCloudAPI program
+# Runs the Melissa Contribution Cloud API Python 3 sample.
+#
+# This script runs ContributionPython3.py with python3, passing along the license and
+# (if supplied) the contribution fields.
+#
+# Overall flow:
+#   1. Parse the command-line options below.
+#   2. Resolve the license (--license, then a prompt, then the MD_LICENSE environment variable).
+#   3. Run ContributionPython3.py: with the contribution fields if any was supplied,
+#      otherwise with only the license (the Python program prompts for each field).
+#
+# Options (each takes a value):
+#   --lat         Proposed latitude for the address.
+#   --long        Proposed longitude for the address.
+#   --mak         Melissa Address Key (MAK) of the address to correct.
+#   --reason      Reason for the change.
+#   --respondTo   Contact (e.g. an email address) to respond to about the contribution.
+#   --license     License string. If omitted, the script prompts for it; if the prompt
+#                 is left blank, it falls back to MD_LICENSE. Running without --license
+#                 always prompts, even when MD_LICENSE is set.
+#
+# Examples:
+#   ./ContributionPython3.sh --license "your-license"
+#   ./ContributionPython3.sh --lat "33.637562" --long "-117.606887" --mak "8008006245" --reason "GeoPoint Change needed" --respondTo "youremail@melissadata.com" --license "your-license"
 
 ######################### Constants ##########################
 
@@ -17,6 +39,9 @@ reason=""
 respondTo=""
 license=""
 
+# Read each --flag and its value. A flag with no value, or whose value looks like an
+# option name (e.g. --lat), is an error; other values starting with "-", such as
+# negative coordinates, are allowed. Unrecognized options are ignored.
 while [ $# -gt 0 ] ; do
   case $1 in
     --lat)
@@ -100,10 +125,13 @@ then
 fi
 
 # Run project
+# No contribution fields supplied -> run with only the license (the program prompts for each field);
+# otherwise pass them all through. Unsupplied fields arrive as empty strings, and the
+# program prompts for them.
 if [ -z "$lat" ] && [ -z "$long" ] && [ -z "$mak" ] && [ -z "$reason" ] && [ -z "$respondTo" ];
 then
-    python3 ContributionPython3.py --license $license 
+    python3 ContributionPython3.py --license "$license"
 else
-    python3 ContributionPython3.py --license $license --lat "$lat" --long "$long" --mak "$mak" --reason "$reason" --respondTo "$respondTo"
+    python3 ContributionPython3.py --license "$license" --lat "$lat" --long "$long" --mak "$mak" --reason "$reason" --respondTo "$respondTo"
 fi
 
